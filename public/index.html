@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>File Upload</title>
+  <style>
+    #progressContainer {
+      width: 100%;
+      background-color: #f3f3f3;
+      border: 1px solid #ccc;
+      margin-top: 10px;
+      display: none;
+    }
+
+    #progressBar {
+      width: 0%;
+      height: 20px;
+      background-color: #4caf50;
+      text-align: center;
+      color: white;
+    }
+  </style>
+</head>
+<body>
+  <h1>Upload and Manage Files</h1>
+
+  <form id="uploadForm">
+    <input type="file" id="fileInput" name="files" multiple required />
+    <button type="submit">Upload</button>
+  </form>
+
+  <div id="progressContainer">
+    <div id="progressBar">0%</div>
+  </div>
+
+  <h2>Uploaded Files</h2>
+  <button id="deleteAllButton">Delete All Files</button>
+  <ul id="fileList"></ul>
+
+  <p id="status"></p>
+
+  <!-- Include the upload.js script -->
+  <script src="/upload.js"></script>
+</body>
+</html>
