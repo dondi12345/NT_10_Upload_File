@@ -90,45 +90,19 @@ function fetchFiles() {
 document.addEventListener('DOMContentLoaded', fetchFiles);
 // Handle multiple file uploads with progress tracking
 uploadForm.addEventListener('submit', function (event) { return __awaiter(_this, void 0, void 0, function () {
-    var fileInput, files, formData, response, result, error_2;
+    var fileInput, files, formData;
     return __generator(this, function (_a) {
-        switch (_a.label) {
-            case 0:
-                event.preventDefault();
-                fileInput = document.getElementById('fileInput');
-                files = fileInput.files;
-                if (!files || files.length === 0) {
-                    statusParagraph.textContent = 'Please select at least one file!';
-                    return [2 /*return*/];
-                }
-                formData = new FormData();
-                Array.from(files).forEach(function (file) { return formData.append('files', file); });
-                _a.label = 1;
-            case 1:
-                _a.trys.push([1, 4, , 5]);
-                return [4 /*yield*/, fetch("/upload/".concat(folderName), {
-                        method: 'POST',
-                        body: formData
-                    })];
-            case 2:
-                response = _a.sent();
-                return [4 /*yield*/, response.json()];
-            case 3:
-                result = _a.sent();
-                if (response.ok) {
-                    statusParagraph.textContent = 'Files uploaded successfully!';
-                    fetchFiles();
-                }
-                else {
-                    statusParagraph.textContent = "Error: ".concat(result.message);
-                }
-                return [3 /*break*/, 5];
-            case 4:
-                error_2 = _a.sent();
-                statusParagraph.textContent = "Upload failed: ".concat(error_2);
-                return [3 /*break*/, 5];
-            case 5: return [2 /*return*/];
+        event.preventDefault();
+        fileInput = document.getElementById('fileInput');
+        files = fileInput.files;
+        if (!files || files.length === 0) {
+            statusParagraph.textContent = 'Please select at least one file!';
+            return [2 /*return*/];
         }
+        formData = new FormData();
+        Array.from(files).forEach(function (file) { return formData.append('files', file); });
+        uploadFilesWithProgress(formData);
+        return [2 /*return*/];
     });
 }); });
 // Upload files with progress tracking using XMLHttpRequest
@@ -155,7 +129,7 @@ function uploadFilesWithProgress(formData) {
             if (xhr.status === 200) {
                 var result = JSON.parse(xhr.responseText);
                 statusParagraph.textContent = 'Files uploaded successfully!';
-                renderFileList(result.files, folderName);
+                fetchFiles();
                 resolve();
             }
             else {
@@ -174,7 +148,7 @@ function uploadFilesWithProgress(formData) {
 // Function to delete a single file
 function deleteFile(folderName, filename) {
     return __awaiter(this, void 0, void 0, function () {
-        var response, result, listItem, error_3;
+        var response, result, listItem, error_2;
         return __generator(this, function (_a) {
             switch (_a.label) {
                 case 0:
@@ -198,8 +172,8 @@ function deleteFile(folderName, filename) {
                     }
                     return [3 /*break*/, 4];
                 case 3:
-                    error_3 = _a.sent();
-                    statusParagraph.textContent = "Delete failed: ".concat(error_3);
+                    error_2 = _a.sent();
+                    statusParagraph.textContent = "Delete failed: ".concat(error_2);
                     return [3 /*break*/, 4];
                 case 4: return [2 /*return*/];
             }
@@ -208,7 +182,7 @@ function deleteFile(folderName, filename) {
 }
 // Function to delete all files
 deleteAllButton.addEventListener('click', function () { return __awaiter(_this, void 0, void 0, function () {
-    var response, result, error_4;
+    var response, result, error_3;
     return __generator(this, function (_a) {
         switch (_a.label) {
             case 0:
@@ -230,8 +204,8 @@ deleteAllButton.addEventListener('click', function () { return __awaiter(_this, 
                 }
                 return [3 /*break*/, 4];
             case 3:
-                error_4 = _a.sent();
-                statusParagraph.textContent = "Delete all failed: ".concat(error_4);
+                error_3 = _a.sent();
+                statusParagraph.textContent = "Delete all failed: ".concat(error_3);
                 return [3 /*break*/, 4];
             case 4: return [2 /*return*/];
         }

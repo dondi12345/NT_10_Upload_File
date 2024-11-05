@@ -54,22 +54,22 @@ uploadForm.addEventListener('submit', async (event) => {
 
     const formData = new FormData();
     Array.from(files).forEach((file) => formData.append('files', file));
-
-    try {
-        const response = await fetch(`/upload/${folderName}`, {
-            method: 'POST',
-            body: formData
-        });
-        const result = await response.json();
-        if (response.ok) {
-            statusParagraph.textContent = 'Files uploaded successfully!';
-            fetchFiles();
-        } else {
-            statusParagraph.textContent = `Error: ${result.message}`;
-        }
-    } catch (error) {
-        statusParagraph.textContent = `Upload failed: ${error}`;
-    }
+    uploadFilesWithProgress(formData);
+    // try {
+    //     const response = await fetch(`/upload/${folderName}`, {
+    //         method: 'POST',
+    //         body: formData
+    //     });
+    //     const result = await response.json();
+    //     if (response.ok) {
+    //         statusParagraph.textContent = 'Files uploaded successfully!';
+    //         fetchFiles();
+    //     } else {
+    //         statusParagraph.textContent = `Error: ${result.message}`;
+    //     }
+    // } catch (error) {
+    //     statusParagraph.textContent = `Upload failed: ${error}`;
+    // }
 });
 
 // Upload files with progress tracking using XMLHttpRequest
@@ -100,7 +100,7 @@ function uploadFilesWithProgress(formData: FormData) {
             if (xhr.status === 200) {
                 const result = JSON.parse(xhr.responseText);
                 statusParagraph.textContent = 'Files uploaded successfully!';
-                renderFileList(result.files, folderName);
+                fetchFiles();
                 resolve();
             } else {
                 reject(`Error: ${xhr.statusText}`);
