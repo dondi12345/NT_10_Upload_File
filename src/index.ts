@@ -67,10 +67,12 @@ app.use('/create-folder', basicAuth);
 app.use(express.static('public'));
 app.use(express.static('uploads'));
 
-// Serve v1
-app.use('/card_battle', express.static('uploads/card_battle_v1'));
-// Serve v2
-app.use('/card_battle', express.static('uploads/card_battle_v2'));
+fs.readdir(uploadDir, { withFileTypes: true }, (err, files) => {
+    const folders = files.filter(dirent => dirent.isDirectory()).map(dirent => dirent.name);
+    for (let index = 0; index < folders.length; index++) {
+        app.use('/card_battle', express.static('uploads/' + folders[index]));
+    }
+});
 
 app.get('/home', (req, res) => {
     res.sendFile(path.join(__dirname, '../public/manager_page.html'));
@@ -193,7 +195,7 @@ app.get('/folders', (req: Request, res: Response) => {
 app.post('/create-folder', (req: Request, res: Response) => {
     const folderName = req.body.folderName;
     const folderPath = path.join(uploadDir, folderName);
-
+    app.use('/card_battle', express.static('uploads/' + folderName));
     if (!fs.existsSync(folderPath)) {
         fs.mkdirSync(folderPath, { recursive: true });
         res.status(200).json({ message: 'Folder created successfully!' });
