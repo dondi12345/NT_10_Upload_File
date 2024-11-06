@@ -58,6 +58,7 @@ const basicAuth = (req: Request, res: Response, next: NextFunction) => {
 app.use(express.json());
 
 // Apply the authentication middleware to protected routes
+app.use('/home', basicAuth);
 app.use('/upload', basicAuth);
 app.use('/files', basicAuth);
 app.use('/delete', basicAuth);
@@ -67,9 +68,13 @@ app.use(express.static('public'));
 app.use(express.static('uploads'));
 
 // Serve v1
-app.use('/card_battle',express.static('uploads/card_battle_v1'));
+app.use('/card_battle', express.static('uploads/card_battle_v1'));
 // Serve v2
-app.use('/card_battle',express.static('uploads/card_battle_v2'));
+app.use('/card_battle', express.static('uploads/card_battle_v2'));
+
+app.get('/home', (req, res) => {
+    res.sendFile(path.join(__dirname, '../public/manager_page.html'));
+});
 
 app.get('/upload_file/:folder_name', (req, res) => {
     res.sendFile(path.join(__dirname, '../public/index.html'));
@@ -172,6 +177,44 @@ app.delete('/delete-all/:folderName', (req, res) => {
     });
 });
 
+// Get list of folders
+app.get('/folders', (req: Request, res: Response) => {
+    fs.readdir(uploadDir, { withFileTypes: true }, (err, files) => {
+        if (err) {
+            return res.status(500).json({ message: 'Failed to read directory!' });
+        }
+
+        const folders = files.filter(dirent => dirent.isDirectory()).map(dirent => dirent.name);
+        res.status(200).json({ folders });
+    });
+});
+
+// Handle folder creation
+app.post('/create-folder', (req: Request, res: Response) => {
+    const folderName = req.body.folderName;
+    const folderPath = path.join(uploadDir, folderName);
+
+    if (!fs.existsSync(folderPath)) {
+        fs.mkdirSync(folderPath, { recursive: true });
+        res.status(200).json({ message: 'Folder created successfully!' });
+    } else {
+        res.status(400).json({ message: 'Folder already exists!' });
+    }
+});
+
+
+// Handle folder deletion
+app.delete('/delete-folder/:folderName', (req: Request, res: Response) => {
+    const { folderName } = req.params;
+    const folderPath = path.join(uploadDir, folderName);
+
+    if (fs.existsSync(folderPath)) {
+        fs.rmdirSync(folderPath, { recursive: true });
+        res.status(200).json({ message: 'Folder deleted successfully!' });
+    } else {
+        res.status(400).json({ message: 'Folder does not exist!' });
+    }
+});
 
 // Start the server
 app.listen(PORT, () => {

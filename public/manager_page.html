@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Folder Management</title>
+    <style>
+        .folder-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .folder-item button {
+            margin-right: 10px;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Folder Management</h1>
+    <form id="createFolderForm">
+        <input type="text" id="folderNameInput" name="folderName" placeholder="Folder Name" required />
+        <button type="submit">Create Folder</button>
+    </form>
+    <h2>Folders</h2>
+    <ul id="folderList"></ul>
+    <p id="status"></p>
+    <script>
+        const folderList = document.getElementById('folderList');
+        const statusParagraph = document.getElementById('status');
+        const createFolderForm = document.getElementById('createFolderForm');
+        const folderNameInput = document.getElementById('folderNameInput');
+
+        async function fetchFolders() {
+            try {
+                const response = await fetch('/folders');
+                const result = await response.json();
+                if (response.ok) {
+                    renderFolderList(result.folders);
+                } else {
+                    statusParagraph.textContent = `Error: ${result.message}`;
+                }
+            } catch (error) {
+                statusParagraph.textContent = `Failed to fetch folders: ${error}`;
+            }
+        }
+
+        function renderFolderList(folders) {
+            folderList.innerHTML = ''; // Clear the list
+            folders.forEach((folder) => {
+                const listItem = document.createElement('li');
+                listItem.classList.add('folder-item');
+
+                const link = document.createElement('a');
+                link.href = `/upload_file/${folder}`;
+                link.textContent = folder;
+
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Delete';
+                deleteButton.addEventListener('click', () => deleteFolder(folder));
+
+                listItem.appendChild(deleteButton);
+                listItem.appendChild(link);
+                folderList.appendChild(listItem);
+            });
+        }
+
+        createFolderForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const folderName = folderNameInput.value.trim();
+
+            if (!folderName) {
+                statusParagraph.textContent = 'Please enter a folder name!';
+                return;
+            }
+
+            try {
+                const response = await fetch('/create-folder', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ folderName })
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    statusParagraph.textContent = 'Folder created successfully!';
+                    fetchFolders(); // Refresh the folder list
+                } else {
+                    statusParagraph.textContent = `Error: ${result.message}`;
+                }
+            } catch (error) {
+                statusParagraph.textContent = `Failed to create folder: ${error}`;
+            }
+        });
+
+        async function deleteFolder(folderName) {
+            try {
+                const response = await fetch(`/delete-folder/${folderName}`, {
+                    method: 'DELETE',
+                });
+                const result = await response.json();
+                if (response.ok) {
+                    statusParagraph.textContent = result.message;
+                    fetchFolders(); // Refresh the folder list
+                } else {
+                    statusParagraph.textContent = `Error: ${result.message}`;
+                }
+            } catch (error) {
+                statusParagraph.textContent = `Failed to delete folder: ${error}`;
+            }
+        }
+
+        // Initialize the folder list on page load
+        document.addEventListener('DOMContentLoaded', fetchFolders);
+    </script>
+</body>
+
+</html>
