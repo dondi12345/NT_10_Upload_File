@@ -6,6 +6,7 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.API_PORT;
+const ProjectName = process.env.ProjectName
 const uploadDir = path.join(__dirname, '../uploads');
 
 // Basic authentication middleware
@@ -71,7 +72,7 @@ app.use(express.static('uploads'));
 fs.readdir(uploadDir, { withFileTypes: true }, (err, files) => {
     const folders = files.filter(dirent => dirent.isDirectory()).map(dirent => dirent.name);
     for (let index = 0; index < folders.length; index++) {
-        app.use('/card_battle', express.static('uploads/' + folders[index]));
+        app.use(`/${ProjectName}`, express.static('uploads/' + folders[index]));
     }
 });
 
@@ -196,7 +197,7 @@ app.get('/folders', (req: Request, res: Response) => {
 app.post('/create-folder', (req: Request, res: Response) => {
     const folderName = req.body.folderName;
     const folderPath = path.join(uploadDir, folderName);
-    app.use('/card_battle', express.static('uploads/' + folderName));
+    app.use(`/${ProjectName}`, express.static('uploads/' + folderName));
     if (!fs.existsSync(folderPath)) {
         fs.mkdirSync(folderPath, { recursive: true });
         res.status(200).json({ message: 'Folder created successfully!' });
