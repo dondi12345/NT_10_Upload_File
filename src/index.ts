@@ -2,9 +2,10 @@ import express, { Request, Response, NextFunction } from 'express';
 import fs from 'fs';
 import path from 'path';
 import multer from 'multer';
+require('dotenv').config();
 
 const app = express();
-const PORT = 4001;
+const PORT = process.env.API_PORT;
 const uploadDir = path.join(__dirname, '../uploads');
 
 // Basic authentication middleware
