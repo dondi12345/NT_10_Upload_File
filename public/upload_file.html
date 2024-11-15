@@ -1,0 +1,200 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>File Upload</title>
+    <style>
+        #progressContainer {
+            width: 100%;
+            background-color: #f3f3f3;
+            border: 1px solid #ccc;
+            margin-top: 10px;
+            display: none;
+        }
+
+        #progressBar {
+            width: 0%;
+            height: 20px;
+            background-color: #4caf50;
+            text-align: center;
+            color: white;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>Upload and Manage Files</h1>
+
+    <form id="uploadForm">
+        <input type="file" id="fileInput" name="files" multiple required />
+        <button type="submit">Upload</button>
+    </form>
+
+    <div id="progressContainer">
+        <div id="progressBar">0%</div>
+    </div>
+
+    <h2>Uploaded Files</h2>
+    <button id="deleteAllButton">Delete All Files</button>
+    <ul id="fileList"></ul>
+
+    <p id="status"></p>
+
+    <!-- Include the upload.js script -->
+    <script>
+        const uploadForm = document.getElementById('uploadForm');
+        const statusParagraph = document.getElementById('status');
+        const fileList = document.getElementById('fileList');
+        const deleteAllButton = document.getElementById('deleteAllButton');
+        const progressContainer = document.getElementById('progressContainer');
+        const progressBar = document.getElementById('progressBar');
+
+        function getProjectNameFromURL() {
+            const pathSegments = window.location.pathname.split('/');
+            return pathSegments[pathSegments.length - 2]; // Assuming folderName is the last -1 segment
+        }
+
+        function getVersionNameFromURL() {
+            const pathSegments = window.location.pathname.split('/');
+            return pathSegments[pathSegments.length - 1]; // Assuming folderName is the last segment
+        }
+
+        function renderFileList(files) {
+            fileList.innerHTML = ''; // Clear the list
+            files.forEach((file) => {
+                const listItem = document.createElement('li');
+                listItem.textContent = `${file.filename} (${file.size})`;
+                const deleteButton = document.createElement('button');
+                deleteButton.textContent = 'Delete';
+                deleteButton.addEventListener('click', () => deleteFile(file.filename));
+                listItem.appendChild(deleteButton);
+                fileList.appendChild(listItem);;
+            });
+        }
+
+        async function fetchFiles() {
+            try {
+                const response = await fetch(`/files/${getProjectNameFromURL()}/${getVersionNameFromURL()}`);
+                console.log(`/files/${getProjectNameFromURL()}/${getVersionNameFromURL()}`);
+                const result = await response.json();
+                if (response.ok) {
+                    renderFileList(result.files, getVersionNameFromURL());
+                } else {
+                    statusParagraph.textContent = `Error: ${result.message}`;
+                }
+            } catch (error) {
+                statusParagraph.textContent = `Failed to fetch files: ${error}`;
+            }
+        }
+
+        // Handle multiple file uploads with progress tracking
+        uploadForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+
+            const fileInput = document.getElementById('fileInput');
+            const files = fileInput.files;
+
+            if (!files || files.length === 0) {
+                statusParagraph.textContent = 'Please select at least one file!';
+                return;
+            }
+
+            const formData = new FormData();
+            Array.from(files).forEach((file) => formData.append('files', file));
+            uploadFilesWithProgress(formData);
+        });
+
+        // Upload files with progress tracking using XMLHttpRequest
+        function uploadFilesWithProgress(formData) {
+            return new Promise ((resolve, reject) => {
+                const xhr = new XMLHttpRequest();
+
+                xhr.open('POST', `/upload/${getProjectNameFromURL()}/${getVersionNameFromURL()}`, true);
+
+                // Track the upload progress
+                xhr.upload.onprogress = (event) => {
+                    if (event.lengthComputable) {
+                        const percentComplete = Math.round((event.loaded / event.total) * 100);
+                        progressBar.style.width = `${percentComplete}%`;
+                        progressBar.textContent = `${percentComplete}%`;
+                    }
+                };
+
+                // Show progress bar when upload starts
+                xhr.onloadstart = () => {
+                    progressContainer.style.display = 'block';
+                    progressBar.style.width = '0%';
+                    progressBar.textContent = '0%';
+                };
+
+                // Hide progress bar and resolve when upload is complete
+                xhr.onload = () => {
+                    if (xhr.status === 200) {
+                        const result = JSON.parse(xhr.responseText);
+                        statusParagraph.textContent = 'Files uploaded successfully!';
+                        fetchFiles();
+                        resolve();
+                    } else {
+                        reject(`Error: ${xhr.statusText}`);
+                    }
+                    progressContainer.style.display = 'none';
+                };
+
+                // Handle errors during upload
+                xhr.onerror = () => {
+                    reject('Upload failed due to a network error.');
+                    progressContainer.style.display = 'none';
+                };
+
+                xhr.send(formData);
+            });
+        }
+
+        // Function to delete a single file
+        async function deleteFile(filename) {
+            try {
+                const response = await fetch(`/delete/${getProjectNameFromURL()}/${getVersionNameFromURL()}/${filename}`, {
+                    method: 'DELETE',
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    statusParagraph.textContent = result.message;
+                    const listItem = Array.from(fileList.children).find(
+                        (item) => item.textContent?.includes(filename)
+                    );
+                    if (listItem) fileList.removeChild(listItem);
+                } else {
+                    statusParagraph.textContent = `Error: ${result.message}`;
+                }
+            } catch (error) {
+                statusParagraph.textContent = `Delete failed: ${error}`;
+            }
+        }
+
+        // Function to delete all files
+        deleteAllButton.addEventListener('click', async () => {
+            try {
+                const response = await fetch(`/delete-all/${getProjectNameFromURL()}/${getVersionNameFromURL()}`, {
+                    method: 'DELETE',
+                });
+
+                const result = await response.json();
+                if (response.ok) {
+                    statusParagraph.textContent = result.message;
+                    fileList.innerHTML = ''; // Clear the file list
+                } else {
+                    statusParagraph.textContent = `Error: ${result.message}`;
+                }
+            } catch (error) {
+                statusParagraph.textContent = `Delete all failed: ${error}`;
+            }
+        });
+
+        document.addEventListener('DOMContentLoaded', fetchFiles);
+    </script>
+</body>
+
+</html>

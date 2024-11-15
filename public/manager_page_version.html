@@ -18,12 +18,12 @@
 </head>
 
 <body>
-    <h1>Folder Management</h1>
+    <h1>Version Management</h1>
     <form id="createFolderForm">
         <input type="text" id="folderNameInput" name="folderName" placeholder="Folder Name" required />
         <button type="submit">Create Folder</button>
     </form>
-    <h2>Folders</h2>
+    <h2>Versions</h2>
     <ul id="folderList"></ul>
     <p id="status"></p>
     <script>
@@ -32,9 +32,14 @@
         const createFolderForm = document.getElementById('createFolderForm');
         const folderNameInput = document.getElementById('folderNameInput');
 
+        function getProjectNameFromURL() {
+            const pathSegments = window.location.pathname.split('/');
+            return pathSegments[pathSegments.length - 1]; // Assuming folderName is the last segment
+        }
+
         async function fetchFolders() {
             try {
-                const response = await fetch('/folders');
+                const response = await fetch(`/folders/${getProjectNameFromURL()}`);
                 const result = await response.json();
                 if (response.ok) {
                     renderFolderList(result.folders);
@@ -53,7 +58,7 @@
                 listItem.classList.add('folder-item');
 
                 const link = document.createElement('a');
-                link.href = `/upload_file/${folder}`;
+                link.href = `/upload_file/${getProjectNameFromURL()}/${folder}`;
                 link.textContent = folder;
 
                 const deleteButton = document.createElement('button');
@@ -76,7 +81,7 @@
             }
 
             try {
-                const response = await fetch('/create-folder', {
+                const response = await fetch(`/create-folder/${getProjectNameFromURL()}`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json'
@@ -86,7 +91,7 @@
 
                 const result = await response.json();
                 if (response.ok) {
-                    statusParagraph.textContent = 'Folder created successfully!';
+                    statusParagraph.textContent = result.message;
                     fetchFolders(); // Refresh the folder list
                 } else {
                     statusParagraph.textContent = `Error: ${result.message}`;
@@ -98,7 +103,7 @@
 
         async function deleteFolder(folderName) {
             try {
-                const response = await fetch(`/delete-folder/${folderName}`, {
+                const response = await fetch(`/delete-folder/${getProjectNameFromURL()}/${folderName}`, {
                     method: 'DELETE',
                 });
                 const result = await response.json();
