@@ -75,6 +75,7 @@ fs.readdir(uploadDir, { withFileTypes: true }, (err, files) => {
             const versionNames = files.filter(dirent => dirent.isDirectory()).map(dirent => dirent.name);
             for (let idx_version = 0; idx_version < versionNames.length; idx_version++) {
                 app.use(`/${projectNames[idx_project]}`, express.static('uploads/' + projectNames[idx_project] + "/" + versionNames[idx_version]));
+                app.use(`/project/${projectNames[idx_project]}`, express.static('uploads/' + projectNames[idx_project] + "/" + versionNames[idx_version]));
             }
         });
     }
