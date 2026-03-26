@@ -6,7 +6,12 @@ require('dotenv').config();
 
 const app = express();
 const PORT = process.env.API_PORT;
+
 const uploadDir = path.join(__dirname, '../uploads');
+
+if(!fs.existsSync(uploadDir)) {
+    fs.mkdirSync(uploadDir, { recursive: true });
+}
 
 // Basic authentication middleware
 const basicAuth = (req: Request, res: Response, next: NextFunction) => {
