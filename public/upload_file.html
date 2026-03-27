@@ -168,18 +168,18 @@
             color: #2c5a7a;
         }
 
-        /* file grid */
-        .file-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-            gap: 1.2rem;
+        /* file list (vertical bar layout) */
+        .file-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
             margin-top: 1rem;
         }
 
-        .file-card {
+        .file-item {
             background: white;
-            border-radius: 24px;
-            padding: 1rem 1.2rem;
+            border-radius: 20px;
+            padding: 0.9rem 1.2rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
@@ -188,40 +188,43 @@
             box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
         }
 
-        .file-card:hover {
+        .file-item:hover {
             border-color: #cbdde9;
-            transform: translateY(-2px);
-            box-shadow: 0 12px 18px -10px rgba(0, 0, 0, 0.1);
+            transform: translateY(-1px);
+            box-shadow: 0 8px 16px -8px rgba(0, 0, 0, 0.1);
         }
 
         .file-info {
             display: flex;
             align-items: center;
             gap: 12px;
-            overflow: hidden;
+            flex: 1;
+            min-width: 0; /* Allows text truncation */
         }
 
         .file-icon {
-            font-size: 1.8rem;
-            width: 36px;
+            font-size: 1.6rem;
+            width: 32px;
             text-align: center;
+            flex-shrink: 0;
         }
 
         .file-details {
             overflow: hidden;
+            flex: 1;
         }
 
         .file-name {
-            font-weight: 700;
+            font-weight: 600;
             color: #1e293b;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
-            max-width: 140px;
+            font-size: 1rem;
         }
 
         .file-size {
-            font-size: 0.7rem;
+            font-size: 0.75rem;
             color: #6c7a91;
             margin-top: 2px;
         }
@@ -231,10 +234,12 @@
             border: none;
             font-size: 1.3rem;
             cursor: pointer;
-            padding: 6px;
+            padding: 8px;
             border-radius: 40px;
             color: #9ca3af;
             transition: all 0.2s;
+            flex-shrink: 0;
+            margin-left: 12px;
         }
 
         .delete-file-btn:hover {
@@ -294,20 +299,19 @@
             text-align: center;
         }
 
-        hr {
-            margin: 1rem 0;
-            border: none;
-            height: 1px;
-            background: #e2e8f0;
-        }
-
         @media (max-width: 640px) {
             .card-body {
                 padding: 1.2rem;
             }
-
-            .file-grid {
-                grid-template-columns: 1fr;
+            .file-item {
+                padding: 0.7rem 1rem;
+            }
+            .file-icon {
+                font-size: 1.3rem;
+                width: 28px;
+            }
+            .file-name {
+                font-size: 0.9rem;
             }
         }
     </style>
@@ -425,7 +429,7 @@
             return '📎';
         }
 
-        // render file list as beautiful cards
+        // render file list as vertical bar list
         function renderFileList(files) {
             fileListContainer.innerHTML = '';
             if (!files || files.length === 0) {
@@ -436,30 +440,30 @@
                 return;
             }
 
-            const grid = document.createElement('div');
-            grid.className = 'file-grid';
+            const list = document.createElement('div');
+            list.className = 'file-list';
             files.forEach((file) => {
-                const card = document.createElement('div');
-                card.className = 'file-card';
+                const item = document.createElement('div');
+                item.className = 'file-item';
                 const icon = getFileIcon(file.filename);
-                card.innerHTML = `
+                item.innerHTML = `
                     <div class="file-info">
                         <div class="file-icon">${icon}</div>
                         <div class="file-details">
                             <div class="file-name" title="${escapeHtml(file.filename)}">${escapeHtml(file.filename)}</div>
-                            <div class="file-size">${file.size ? file.size : formatFileSize(file.sizeBytes || 0)}</div>
+                            <div class="file-size">📅 ${file.modified || 'Unknown'} | ${file.size ? file.size : formatFileSize(file.sizeBytes || 0)}</div>
                         </div>
                     </div>
                     <button class="delete-file-btn" data-filename="${escapeHtml(file.filename)}" title="Delete file">🗑️</button>
                 `;
-                const delBtn = card.querySelector('.delete-file-btn');
+                const delBtn = item.querySelector('.delete-file-btn');
                 delBtn.addEventListener('click', (e) => {
                     e.stopPropagation();
                     deleteFile(file.filename);
                 });
-                grid.appendChild(card);
+                list.appendChild(item);
             });
-            fileListContainer.appendChild(grid);
+            fileListContainer.appendChild(list);
         }
 
         function escapeHtml(str) {
@@ -570,9 +574,8 @@
 
         // delete single file WITH CONFIRMATION
         async function deleteFile(filename) {
-            // 🔔 Added confirmation dialog
             const confirmDelete = confirm(`⚠️ Are you sure you want to delete "${filename}"? This action cannot be undone.`);
-            if (!confirmDelete) return; // user canceled
+            if (!confirmDelete) return;
 
             try {
                 const project = getProjectNameFromURL();

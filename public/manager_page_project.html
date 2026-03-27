@@ -160,30 +160,30 @@
             transform: translateY(-1px);
         }
 
-        /* Project grid */
-        .project-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-            gap: 1.5rem;
+        /* Project list (vertical bar layout) */
+        .project-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
             margin-top: 0.5rem;
         }
 
-        .project-card {
+        .project-item {
             background: white;
-            border-radius: 28px;
-            padding: 1.4rem 1.5rem;
-            transition: all 0.25s;
-            border: 1px solid #eef2f8;
-            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.02);
+            border-radius: 20px;
+            padding: 0.9rem 1.2rem;
             display: flex;
             align-items: center;
             justify-content: space-between;
+            border: 1px solid #eef2f8;
+            transition: all 0.2s;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
         }
 
-        .project-card:hover {
-            transform: translateY(-4px);
+        .project-item:hover {
             border-color: #cbdde9;
-            box-shadow: 0 20px 25px -12px rgba(0, 0, 0, 0.1);
+            transform: translateY(-1px);
+            box-shadow: 0 8px 16px -8px rgba(0, 0, 0, 0.1);
         }
 
         .project-info {
@@ -191,22 +191,29 @@
             align-items: center;
             gap: 12px;
             flex: 1;
-            min-width: 0;
+            min-width: 0; /* Allows text truncation */
         }
 
         .project-icon {
-            font-size: 2rem;
+            font-size: 1.6rem;
+            width: 32px;
+            text-align: center;
+            flex-shrink: 0;
+        }
+
+        .project-details {
+            overflow: hidden;
+            flex: 1;
         }
 
         .project-name {
-            font-size: 1.2rem;
-            font-weight: 700;
-            color: #0c2e42;
-            text-decoration: none;
-            transition: color 0.2s;
+            font-weight: 600;
+            color: #1e293b;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            font-size: 1rem;
+            text-decoration: none;
         }
 
         .project-name:hover {
@@ -217,18 +224,19 @@
         .delete-project-btn {
             background: none;
             border: none;
-            font-size: 1.4rem;
+            font-size: 1.3rem;
             cursor: pointer;
             padding: 8px;
             border-radius: 40px;
+            color: #9ca3af;
             transition: all 0.2s;
-            color: #94a3b8;
+            flex-shrink: 0;
+            margin-left: 12px;
         }
 
         .delete-project-btn:hover {
             background: #fee2e2;
-            color: #dc2626;
-            transform: scale(1.05);
+            color: #ef4444;
         }
 
         .empty-state {
@@ -252,19 +260,19 @@
             transition: all 0.2s;
         }
 
-        hr {
-            margin: 1rem 0;
-            border: none;
-            height: 1px;
-            background: linear-gradient(to right, #e2e8f0, transparent);
-        }
-
         @media (max-width: 640px) {
             .card-body {
                 padding: 1.2rem;
             }
-            .project-grid {
-                grid-template-columns: 1fr;
+            .project-item {
+                padding: 0.7rem 1rem;
+            }
+            .project-icon {
+                font-size: 1.3rem;
+                width: 28px;
+            }
+            .project-name {
+                font-size: 0.9rem;
             }
             .form-group {
                 flex-direction: column;
@@ -348,26 +356,28 @@
             return;
         }
 
-        const grid = document.createElement('div');
-        grid.className = 'project-grid';
+        const list = document.createElement('div');
+        list.className = 'project-list';
         folders.forEach((folder) => {
-            const card = document.createElement('div');
-            card.className = 'project-card';
-            card.innerHTML = `
+            const item = document.createElement('div');
+            item.className = 'project-item';
+            item.innerHTML = `
                 <div class="project-info">
                     <span class="project-icon">🗂️</span>
-                    <a href="/project/${encodeURIComponent(folder)}" class="project-name">${escapeHtml(folder)}</a>
+                    <div class="project-details">
+                        <a href="/project/${encodeURIComponent(folder)}" class="project-name">${escapeHtml(folder)}</a>
+                    </div>
                 </div>
                 <button class="delete-project-btn" data-folder="${escapeHtml(folder)}" title="Delete project">🗑️</button>
             `;
-            const deleteBtn = card.querySelector('.delete-project-btn');
+            const deleteBtn = item.querySelector('.delete-project-btn');
             deleteBtn.addEventListener('click', (e) => {
                 e.stopPropagation();
                 deleteFolder(folder);
             });
-            grid.appendChild(card);
+            list.appendChild(item);
         });
-        folderListContainer.appendChild(grid);
+        folderListContainer.appendChild(list);
     }
 
     function escapeHtml(str) {

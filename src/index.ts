@@ -183,7 +183,10 @@ app.get('/files/:projectName/:versionName', (req: Request, res: Response) => {
         const fileDetails = files.map((filename) => {
             const filePath = path.join(folderPath, filename);
             const stats = fs.statSync(filePath);
-            return { filename, size: formatFileSize(stats.size) };
+            const modifiedISO = stats.mtime.toISOString();
+            // format modifiedISO to YYYY-MM-DD HH:MM:SS
+            const modified = new Date(modifiedISO).toLocaleString('en-US', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            return { filename, size: formatFileSize(stats.size), modified: modified, };
         });
 
         res.status(200).json({ files: fileDetails });
@@ -229,6 +232,12 @@ app.get('/folders', (req: Request, res: Response) => {
         }
 
         const folders = files.filter(dirent => dirent.isDirectory()).map(dirent => dirent.name);
+        // sort by name
+        folders.sort((a: string, b: string) => {
+            if(a < b) return 1;
+            else if(a > b) return -1;
+            else return 0;
+        });
         res.status(200).json({ folders });
     });
 });
@@ -241,6 +250,12 @@ app.get('/folders/:projectName', (req: Request, res: Response) => {
         }
 
         const folders = files.filter(dirent => dirent.isDirectory()).map(dirent => dirent.name);
+        // sort by name
+        folders.sort((a: string, b: string) => {
+            if(a < b) return 1;
+            else if(a > b) return -1;
+            else return 0;
+        });
         res.status(200).json({ folders });
     });
 });
