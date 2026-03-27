@@ -3,123 +3,492 @@
 
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Folder Management</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <title>Version Manager | Game Assets</title>
     <style>
-        .folder-item {
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(145deg, #f0f4fa 0%, #e6edf4 100%);
+            font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, Helvetica, sans-serif;
+            padding: 2rem 1.5rem;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+        }
+
+        /* Breadcrumb */
+        .breadcrumb {
             display: flex;
             align-items: center;
-            margin-bottom: 10px;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 2rem;
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(4px);
+            padding: 0.7rem 1.2rem;
+            border-radius: 60px;
+            width: fit-content;
+            box-shadow: 0 2px 6px rgba(0, 0, 0, 0.02);
         }
-        .folder-item button {
-            margin-right: 10px;
+
+        .breadcrumb a {
+            text-decoration: none;
+            color: #1f5e7e;
+            font-weight: 500;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .breadcrumb a:hover {
+            color: #0f3b4f;
+            text-decoration: underline;
+        }
+
+        .breadcrumb span {
+            color: #5b6e8c;
+        }
+
+        .breadcrumb .current {
+            font-weight: 600;
+            color: #0f2b3f;
+        }
+
+        /* Cards */
+        .card {
+            background: rgba(255, 255, 255, 0.96);
+            border-radius: 32px;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.08), 0 1px 2px rgba(0, 0, 0, 0.02);
+            margin-bottom: 2rem;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            border: 1px solid rgba(255, 255, 255, 0.6);
+        }
+
+        .card:hover {
+            box-shadow: 0 25px 40px -14px rgba(0, 0, 0, 0.12);
+        }
+
+        .card-header {
+            padding: 1.5rem 2rem 0.5rem 2rem;
+            border-bottom: 1px solid #eef2f8;
+            display: flex;
+            justify-content: space-between;
+            align-items: baseline;
+            flex-wrap: wrap;
+            gap: 12px;
+        }
+
+        .card-header h2 {
+            font-size: 1.6rem;
+            font-weight: 600;
+            background: linear-gradient(135deg, #1e3a5f, #2c5a7a);
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+        }
+
+        .card-body {
+            padding: 1.8rem 2rem 2rem 2rem;
+        }
+
+        /* Form */
+        .form-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            align-items: flex-end;
+        }
+
+        .input-wrapper {
+            flex: 2;
+            min-width: 200px;
+        }
+
+        .input-wrapper label {
+            display: block;
+            font-weight: 600;
+            color: #1f3b4c;
+            margin-bottom: 0.5rem;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input {
+            width: 100%;
+            padding: 0.9rem 1.2rem;
+            font-size: 1rem;
+            border: 1.5px solid #e2e8f0;
+            border-radius: 24px;
+            background: #ffffff;
+            transition: all 0.2s;
+            font-family: inherit;
+            outline: none;
+        }
+
+        input:focus {
+            border-color: #3b82f6;
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .btn {
+            border: none;
+            background: #1e3a5f;
+            color: white;
+            font-weight: 600;
+            padding: 0.9rem 1.8rem;
+            border-radius: 40px;
+            font-size: 0.95rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-family: inherit;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+        }
+
+        .btn-primary {
+            background: linear-gradient(105deg, #1e5a7d, #0f4a6e);
+        }
+
+        .btn-primary:hover {
+            background: linear-gradient(105deg, #0f4a6e, #0a3e5c);
+            transform: translateY(-2px);
+            box-shadow: 0 12px 20px -10px rgba(30, 90, 125, 0.4);
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            box-shadow: none;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+        }
+
+        /* Version grid */
+        .version-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+            margin-top: 0.5rem;
+        }
+
+        .version-card {
+            background: white;
+            border-radius: 28px;
+            padding: 1.4rem 1.5rem;
+            transition: all 0.25s;
+            border: 1px solid #eef2f8;
+            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.02);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .version-card:hover {
+            transform: translateY(-4px);
+            border-color: #cbdde9;
+            box-shadow: 0 20px 25px -12px rgba(0, 0, 0, 0.1);
+        }
+
+        .version-info {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .version-icon {
+            font-size: 2rem;
+        }
+
+        .version-name {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #0c2e42;
+            text-decoration: none;
+            transition: color 0.2s;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .version-name:hover {
+            color: #3b82f6;
+            text-decoration: underline;
+        }
+
+        .delete-version-btn {
+            background: none;
+            border: none;
+            font-size: 1.4rem;
+            cursor: pointer;
+            padding: 8px;
+            border-radius: 40px;
+            transition: all 0.2s;
+            color: #94a3b8;
+        }
+
+        .delete-version-btn:hover {
+            background: #fee2e2;
+            color: #dc2626;
+            transform: scale(1.05);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            background: #f8fafc;
+            border-radius: 28px;
+            color: #6b7a8f;
+            font-weight: 500;
+        }
+
+        .status-msg {
+            margin-top: 1rem;
+            padding: 0.8rem 1.2rem;
+            border-radius: 50px;
+            background: #f1f5f9;
+            color: #1e2a3a;
+            font-weight: 500;
+            font-size: 0.9rem;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        @media (max-width: 640px) {
+            .card-body {
+                padding: 1.2rem;
+            }
+
+            .version-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .form-group {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+            .btn {
+                justify-content: center;
+            }
         }
     </style>
 </head>
 
 <body>
-    <h1>Version Management</h1>
-    <form id="createFolderForm">
-        <input type="text" id="folderNameInput" name="folderName" placeholder="Folder Name" required />
-        <button type="submit">Create Folder</button>
-    </form>
-    <h2>Versions</h2>
-    <ul id="folderList"></ul>
-    <p id="status"></p>
+    <div class="container">
+        <!-- Breadcrumb navigation -->
+        <div class="breadcrumb" id="breadcrumbNav">
+            <a href="/project">🏠 Projects</a>
+            <span>›</span>
+            <span id="projectLink" style="font-weight: 600;">Loading...</span>
+        </div>
+
+        <!-- Create Version Card -->
+        <div class="card">
+            <div class="card-header">
+                <h2>✨ Create New Version</h2>
+            </div>
+            <div class="card-body">
+                <form id="createFolderForm">
+                    <div class="form-group">
+                        <div class="input-wrapper">
+                            <label>📌 Version Name</label>
+                            <input type="text" id="folderNameInput" placeholder="e.g., v1.0, alpha, release-candidate"
+                                required autocomplete="off">
+                        </div>
+                        <button type="submit" class="btn btn-primary">➕ Create Version</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Versions List Card -->
+        <div class="card">
+            <div class="card-header">
+                <h2>📂 All Versions</h2>
+                <span style="font-size: 0.8rem; background: #eef2ff; padding: 4px 12px; border-radius: 40px;">click to
+                    manage files</span>
+            </div>
+            <div class="card-body">
+                <p id="status" class="status-msg"></p>
+                <div id="versionList"></div>
+            </div>
+        </div>
+    </div>
+
     <script>
-        const folderList = document.getElementById('folderList');
+        const versionListContainer = document.getElementById('versionList');
         const statusParagraph = document.getElementById('status');
         const createFolderForm = document.getElementById('createFolderForm');
         const folderNameInput = document.getElementById('folderNameInput');
+        const projectLink = document.getElementById('projectLink');
 
         function getProjectNameFromURL() {
-            const pathSegments = window.location.pathname.split('/');
-            return pathSegments[pathSegments.length - 1]; // Assuming folderName is the last segment
+            const pathSegments = window.location.pathname.split('/').filter(p => p);
+            // URL pattern: /project/:projectName  (or /manager_page_version.html? but from context it's /project/:projectName)
+            // The original code uses last segment as project name. We'll keep same logic.
+            return pathSegments[pathSegments.length - 1] || '';
         }
 
-        async function fetchFolders() {
-            try {
-                const response = await fetch(`/folders/${getProjectNameFromURL()}`);
-                const result = await response.json();
-                if (response.ok) {
-                    renderFolderList(result.folders);
-                } else {
-                    statusParagraph.textContent = `Error: ${result.message}`;
-                }
-            } catch (error) {
-                statusParagraph.textContent = `Failed to fetch folders: ${error}`;
+        // Update breadcrumb with project name
+        function updateBreadcrumb() {
+            const project = getProjectNameFromURL();
+            if (project) {
+                projectLink.textContent = project;
+            } else {
+                projectLink.textContent = 'unknown';
             }
         }
 
-        function renderFolderList(folders) {
-            folderList.innerHTML = ''; // Clear the list
-            folders.forEach((folder) => {
-                const listItem = document.createElement('li');
-                listItem.classList.add('folder-item');
+        async function fetchVersions() {
+            try {
+                const project = getProjectNameFromURL();
+                if (!project) {
+                    statusParagraph.textContent = '⚠️ Invalid project path.';
+                    statusParagraph.style.background = "#fee2e2";
+                    return;
+                }
+                const response = await fetch(`/folders/${project}`);
+                const result = await response.json();
+                if (response.ok) {
+                    renderVersionList(result.folders);
+                    statusParagraph.textContent = `✅ ${result.folders.length} version(s) found`;
+                    statusParagraph.style.background = "#e6f7ec";
+                } else {
+                    statusParagraph.textContent = `❌ Error: ${result.message}`;
+                    statusParagraph.style.background = "#fee2e2";
+                }
+            } catch (error) {
+                statusParagraph.textContent = `⚠️ Failed to fetch versions: ${error}`;
+                statusParagraph.style.background = "#fee2e2";
+            }
+        }
 
-                const link = document.createElement('a');
-                link.href = `/upload_file/${getProjectNameFromURL()}/${folder}`;
-                link.textContent = folder;
+        function renderVersionList(versions) {
+            versionListContainer.innerHTML = '';
+            if (!versions.length) {
+                const emptyDiv = document.createElement('div');
+                emptyDiv.className = 'empty-state';
+                emptyDiv.innerHTML = '✨ No versions yet. Create your first version above!';
+                versionListContainer.appendChild(emptyDiv);
+                return;
+            }
 
-                const deleteButton = document.createElement('button');
-                deleteButton.textContent = 'Delete';
-                deleteButton.addEventListener('click', () => deleteFolder(folder));
+            const grid = document.createElement('div');
+            grid.className = 'version-grid';
+            versions.forEach((version) => {
+                const card = document.createElement('div');
+                card.className = 'version-card';
+                const project = getProjectNameFromURL();
+                card.innerHTML = `
+                <div class="version-info">
+                    <span class="version-icon">📦</span>
+                    <a href="/upload_file/${encodeURIComponent(project)}/${encodeURIComponent(version)}" class="version-name">${escapeHtml(version)}</a>
+                </div>
+                <button class="delete-version-btn" data-version="${escapeHtml(version)}" title="Delete version">🗑️</button>
+            `;
+                const deleteBtn = card.querySelector('.delete-version-btn');
+                deleteBtn.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    deleteVersion(version);
+                });
+                grid.appendChild(card);
+            });
+            versionListContainer.appendChild(grid);
+        }
 
-                listItem.appendChild(deleteButton);
-                listItem.appendChild(link);
-                folderList.appendChild(listItem);
+        function escapeHtml(str) {
+            return str.replace(/[&<>]/g, function (m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                return m;
             });
         }
 
         createFolderForm.addEventListener('submit', async (event) => {
             event.preventDefault();
-            const folderName = folderNameInput.value.trim();
+            const versionName = folderNameInput.value.trim();
+            if (!versionName) {
+                statusParagraph.textContent = '📛 Please enter a version name!';
+                statusParagraph.style.background = "#fff3e0";
+                return;
+            }
 
-            if (!folderName) {
-                statusParagraph.textContent = 'Please enter a folder name!';
+            const project = getProjectNameFromURL();
+            if (!project) {
+                statusParagraph.textContent = '❌ Project not found in URL.';
+                statusParagraph.style.background = "#fee2e2";
                 return;
             }
 
             try {
-                const response = await fetch(`/create-folder/${getProjectNameFromURL()}`, {
+                const response = await fetch(`/create-folder/${project}`, {
                     method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
-                    },
-                    body: JSON.stringify({ folderName })
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ folderName: versionName })
                 });
-
                 const result = await response.json();
                 if (response.ok) {
-                    statusParagraph.textContent = result.message;
-                    fetchFolders(); // Refresh the folder list
+                    statusParagraph.textContent = `✅ ${result.message}`;
+                    statusParagraph.style.background = "#e0f2e9";
+                    folderNameInput.value = '';
+                    fetchVersions();
                 } else {
-                    statusParagraph.textContent = `Error: ${result.message}`;
+                    statusParagraph.textContent = `❌ ${result.message}`;
+                    statusParagraph.style.background = "#fee2e2";
                 }
             } catch (error) {
-                statusParagraph.textContent = `Failed to create folder: ${error}`;
+                statusParagraph.textContent = `🔥 Failed to create version: ${error}`;
+                statusParagraph.style.background = "#fee2e2";
             }
         });
 
-        async function deleteFolder(folderName) {
+        async function deleteVersion(versionName) {
+            const confirmMsg = `⚠️ Permanently delete version "${versionName}" and all its files?`;
+            if (!confirm(confirmMsg)) return;
+
+            const project = getProjectNameFromURL();
             try {
-                const response = await fetch(`/delete-folder/${getProjectNameFromURL()}/${folderName}`, {
+                const response = await fetch(`/delete-folder/${project}/${encodeURIComponent(versionName)}`, {
                     method: 'DELETE',
                 });
                 const result = await response.json();
                 if (response.ok) {
-                    statusParagraph.textContent = result.message;
-                    fetchFolders(); // Refresh the folder list
+                    statusParagraph.textContent = `🗑️ ${result.message}`;
+                    statusParagraph.style.background = "#e0f2e9";
+                    fetchVersions();
                 } else {
-                    statusParagraph.textContent = `Error: ${result.message}`;
+                    statusParagraph.textContent = `❌ ${result.message}`;
+                    statusParagraph.style.background = "#fee2e2";
                 }
             } catch (error) {
-                statusParagraph.textContent = `Failed to delete folder: ${error}`;
+                statusParagraph.textContent = `⚠️ Delete failed: ${error}`;
+                statusParagraph.style.background = "#fee2e2";
             }
         }
 
-        // Initialize the folder list on page load
-        document.addEventListener('DOMContentLoaded', fetchFolders);
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            updateBreadcrumb();
+            fetchVersions();
+        });
     </script>
 </body>
 
